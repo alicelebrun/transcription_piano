@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 
+#define NOMBRE_TOUCHES 88
 #define Y_CLAVIER 1729 // coordonée du bord supérieur du clavier
 #define H_BLANCHE 170 //hauteur d'une touche blanche
 #define L_BLANCHE 33 //largeur d'une touche blanche
@@ -34,7 +35,7 @@ struct touche_t {
 };
 
 struct clavier_t {
-  struct touche_t touches[88]; //Un clavier contient 88 touches
+  struct touche_t touches[NOMBRE_TOUCHES]; //Un clavier contient 88 touches
 };
 
 //Dans la fontion ajouter_note, on entre en argument les éléments constitutifs d'une note pour créer une note dans la fonction, puis créer une liste de note contenant la liste passée en argument, + la note nouvellement créée.
