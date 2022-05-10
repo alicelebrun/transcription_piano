@@ -86,3 +86,5 @@ int jouer_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, SDL
   SDL_PauseAudioDevice(*deviceID, 0);
   return 0;
 }
+
+//test git
