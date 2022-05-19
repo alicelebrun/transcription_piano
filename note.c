@@ -1,39 +1,134 @@
 #include "note.h"
-#include <stdlib.h>
-#include <stdio.h>
 
-struct liste_note_t* ajouter_note(struct liste_note_t * liste, Uint32 t_debut, Uint32 t_fin, struct touche_t* touche) {
-	struct note_t* note = malloc(sizeof(struct note_t));
-	if(note == NULL) {
-		printf("Imposible d'ajouter la note.\n");
-		return liste;
-		}
-	note->t_debut = t_debut;
-	note->t_fin = t_fin;
-	note->touche = touche;
+// Crée une note et l'ajoute dans la liste par ordre croissant de date de début
+struct liste_note_t * ajouter_note(struct liste_note_t * liste, Uint32 t_debut, Uint32 t_fin, struct touche_t * touche) {
+  struct note_t * note = malloc(sizeof(struct note_t));
+  if (note == NULL) {
+    return NULL;
+  }
+  struct liste_note_t *nouvelle_liste = malloc(sizeof(struct liste_note_t));
+  if (nouvelle_liste == NULL) {
+    free(note);
+    return NULL;
+  }
+  // Remplir la note
+  note->t_debut = t_debut;
+  note->t_fin = t_fin;
+  note->touche = touche;
+  nouvelle_liste->note = note;
+  // Si la liste est vide elle devient égale à la liste constituée de la nouvelle note
+  if (liste == NULL) {
+    printf("Ajout de ");
+    afficher_note(note);
+    printf(" à la liste vide\n");
+    // On boucle sur le maillon unique
+    nouvelle_liste->suivant = nouvelle_liste;
+    nouvelle_liste->precedent = nouvelle_liste;
+    return nouvelle_liste;
+  }
+  /* Sinon
+     Insérer la note à la bonne place. On parcourt la liste en remontant par les antécédents car les notes
+     sont produites essentiellement dans l'ordre chronologique, les nouvelles notes ont donc plus de chance
+     de se ranger en fin de liste
+     On part du précédent de la tête, c'est-à dire la queue (qui peut être égale à la tête si la liste ne
+     contient qu'un élément) */
+  struct liste_note_t * courant = liste;
+  // Tant qu'on n'a pas bouclé et que la note démarre avant la note courante on remonte la liste
+  while (courant->precedent != liste && t_debut < courant->note->t_debut) {
+    courant = courant->precedent;
+    printf("Remontons la liste, t_debut=%d courant=", t_debut);
+    afficher_note(courant->note);
+  }
+  // Arrivé ici on a bouclé ou on a trouvé une note de la liste actuelle postérieure à la note courante
+  // Si on a bouclé c'est qu'il faut mettre la note à la fin
+  if (courant == liste) {
+    printf("Ajout de ");
+    afficher_note(note);
+    printf(" à la fin\n");
+    liste->precedent->suivant = nouvelle_liste;
+    nouvelle_liste->precedent = liste->precedent;
+    nouvelle_liste->suivant = liste;
+    liste->precedent = nouvelle_liste;
+  }
+  else {
+    printf("Ajout de ");
+    afficher_note(note);
+    printf(" avant courant\n");
+    nouvelle_liste->suivant = courant;
+    nouvelle_liste->precedent = courant->precedent;
+    courant->precedent->suivant = nouvelle_liste;
+    courant->precedent = nouvelle_liste;
+  }
+  return liste;
+}
 
-	struct liste_note_t * nouvelle = malloc(sizeof(struct liste_note_t));
-	if(nouvelle == NULL) {
-		printf("Imposible d'ajouter la note.\n");
-		free(note);
-		return liste;
-		}
-		
-	if(liste != NULL) {
-		liste->precedent = nouvelle;
-		}
-	nouvelle->note = note;
-	nouvelle->precedent = NULL;
-	nouvelle->suivant = liste;
-	return nouvelle;
-	}
-	
-	
-int creer_clavier(struct clavier_t * clavier){
+// Supprime une note de la liste et détruit la note
+struct liste_note_t * supprimer_note(struct liste_note_t * liste, struct note_t * note) {
+  if (note == NULL || liste == NULL) {
+    return liste;
+  }
+  // Si la liste ne contient qu'un élément...
+  if (liste->suivant == liste) {
+    // ...et qu'il correspond à la note
+    if (liste->note == note) {
+      free(liste->note);
+      free(liste);
+      return NULL;
+    }
+    // Sinon rien à faire
+    else return liste;
+  } // Un seul élément
+  // Sinon on parcourt les éléments
+  struct liste_note_t * courant = liste;
+  while (courant->note != note) {
+    courant = courant->suivant;
+    // Si on est revenu en tete de liste on quitte la boucle
+    if (courant == liste) {
+      break;
+    }
+  } // while
+  // A ce point on est sorti soit parce qu'on a parcouru toute la liste en vain soit parce que la note correspond au maillon courant
+  if (courant->note == note) {
+    courant->suivant->precedent = courant->precedent;
+    courant->precedent->suivant = courant->suivant;
+    // Si on supprime la tête, la nouvelle tête est le suivant
+    if (courant == liste) {
+      liste = courant->suivant;
+    }
+    free(courant->note);
+    free(courant);
+  }
+  return liste;
+}
 
+// Affiche les caractéristiques d'une note
+void afficher_note(struct note_t * note) {
+  if (note == NULL) {
+    printf("note=NULL\n");
+  } else {
+    printf("note=%p nom=%s t_debut=%d t_fin=%d\n", note, note->touche->nom, note->t_debut, note->t_fin);
+  }
+}
+
+// Affiche la liste des notes
+void afficher_liste_notes(struct liste_note_t * liste) {
+  if (liste == NULL) {
+    printf("liste=NULL\n");
+  } else {
+    struct liste_note_t * courant = liste;
+    do {
+      afficher_note(courant->note);
+      courant = courant->suivant;
+    } while(courant != liste);
+  } // else
+}
+
+// Crée un clavier
+int creer_clavier(struct clavier_t *clavier) {
+  // On construit maintenant les 88 touches du piano...
   clavier->touches[ 0].nom = "La-1";
   clavier->touches[ 0].frequence = 27.499999999999947;
-  clavier->touches[ 0].type = CENTRE;
+  clavier->touches[ 0].type = GAUCHE;
   clavier->touches[ 0].position.x = 14;
   clavier->touches[ 0].position.y = Y_CLAVIER;
   clavier->touches[ 0].position.w = L_BLANCHE;
@@ -729,10 +824,10 @@ int creer_clavier(struct clavier_t * clavier){
   //
   clavier->touches[87].nom = "Do7";
   clavier->touches[87].frequence = 4186.009044809583;
-  clavier->touches[87].type = GAUCHE;
+  clavier->touches[87].type = PLEINE;
   clavier->touches[87].position.x = 1703;
   clavier->touches[87].position.y = Y_CLAVIER;
   clavier->touches[87].position.w = L_BLANCHE;
   clavier->touches[87].position.h = H_BLANCHE;
   return 0;
-	}
+}
