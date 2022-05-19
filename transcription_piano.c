@@ -42,7 +42,7 @@ int main(int argc, char ** argv) {
 	
 	//On crée une liste de notes
 	struct liste_note_t * notes;
-	notes = transcrire(donnee_son, instant_son, taille, clavier);
+	notes = transcrire(donnee_son, instant_son, taille, &clavier);
 	free(donnee_son);
 	free(instant_son);
 	printf("notes=%p\n", notes);
