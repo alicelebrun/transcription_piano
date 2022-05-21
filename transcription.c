@@ -6,7 +6,7 @@
 #include "transcription.h"
 
 #define HARMONIQUES 2
-#define EPS_AMPLITUDE 0.005
+#define EPS_AMPLITUDE 0.01
 #define LARGEUR_SOUS_BLOC 2000
 #define NOMBRE_SOUS_BLOCS 9
 #define LARGEUR_BLOC (LARGEUR_SOUS_BLOC * (NOMBRE_SOUS_BLOCS + 1) / 2)
@@ -14,7 +14,7 @@
 //#define SAUVE_DANS_FICHIER
 
 int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut, double ** spectrogramme, double ** frequences) { //int début et int fin sont des indices qui permettront de découper le signal en bloc ne contenant qu'une note chacun. *spectrogramme est le spectrogramme qui sera rempli dans la fonction (c'est un tableau qui contiendra l'amplitude de la fft), et frequences est le tableau contenant les fréquences associées au spectrogramme.
-  fftw_complex * signal_bloc = malloc(LARGEUR_SOUS_BLOC * sizeof(fftw_complex)); // On alloue la mémoire pour stocker le bloc de signal réel.
+  double * signal_bloc = malloc(LARGEUR_SOUS_BLOC * sizeof(double)); // On alloue la mémoire pour stocker le bloc de signal réel.
   if (signal_bloc == NULL) {
     printf("Erreur: impossible d'allouer le bloc de signal.");
     return 1;
@@ -42,38 +42,37 @@ int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut
   int demiBloc = LARGEUR_SOUS_BLOC / 2;
 
   for(int i = 0; i < demiBloc; ++i) {
-    (*frequences)[i] = (i+0.0) * df; //demiBloc car la transformée de Fourier d'un signal réel est paire donc les infos sont redondantes
-  }
+    (*frequences)[i] = (i+0.5) * df; //demiBloc car la transformée de Fourier d'un signal réel est paire donc les infos sont redondantes
+  } // for i
 
   //Initialisation du spectrogramme
   for (int i = 0; i < demiBloc; ++i) {
     (*spectrogramme)[i] = 0.0;
-  }
+  } // for i
 
   //Initialisation du filtre
   for (int i = 0; i < LARGEUR_SOUS_BLOC; ++i) {
     filtre[i] = 25.0 / 46.0 - 21.0 / 46.0 * cos(2 * M_PI * i / (LARGEUR_SOUS_BLOC - 1.0));
-  }
+  } // for i
 
   //Boucle sur les sous-blocs
   for (int n = 0; n < NOMBRE_SOUS_BLOCS; ++n) {
     //Application de la fenêtre de Hamming
     for(int i = 0; i < LARGEUR_SOUS_BLOC; ++i) {
-      signal_bloc[i][0] = donnees_son[debut + n * demiBloc + i] * filtre[i]; // fenêtre de Hamming
-      signal_bloc[i][1] = 0.0;
-    }
+      signal_bloc[i] = donnees_son[debut + n * demiBloc + i] * filtre[i]; // fenêtre de Hamming
+    } // for i -> fenêtrage
 
 
     //On réalise la transformée de Fourier du signal.
-    //fftw_plan plan = fftw_plan_dft_r2c_1d(bloc, signal_bloc, fft, FFTW_ESTIMATE); //bloc = taille du signal qu'on manipule,  fft = pointeur vers le résultat de la transformée de Fourier, FFT_ESTIMATE = moyen efficace de trouver les paramètres de l'algoritme de FFT.
     fftw_plan plan;
-    if (n == 0) plan = fftw_plan_dft_1d(LARGEUR_SOUS_BLOC, signal_bloc, fft, FFTW_FORWARD, FFTW_MEASURE); //bloc = taille du signal qu'on manipule,  fft = pointeur vers le résultat de la transformée de Fourier, FFT_ESTIMATE = moyen efficace de trouver les paramètres de l'algoritme de FFT.
+    //Le plan peut être réutilisé tant que signal_bloc et fft sont aux mêmes adresses mémoire->gain en performance
+    if (n == 0) plan = fftw_plan_dft_r2c_1d(LARGEUR_SOUS_BLOC, signal_bloc, fft, FFTW_ESTIMATE); //bloc = taille du signal qu'on manipule,  fft = pointeur vers le résultat de la transformée de Fourier, FFT_ESTIMATE = moyen efficace de trouver les paramètres de l'algoritme de FFT.
     fftw_execute(plan);//Calcul effectif de la FFT
 
     for(int i = 0; i < demiBloc; ++i) {//on part de 0 jusu'à demiBloc-1, on a donc bien demiBloc indices à balayer
       (*spectrogramme)[i] += fft[i][0]*fft[i][0] + fft[i][1]*fft[i][1]; //partie réelle ^2 + partie im. ^2
-    }
-  }
+    } // for i -> spectrogramme
+  } // for n -> moyenne sur les blocs
   return 0;
 }
 
