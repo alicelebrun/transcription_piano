@@ -15,34 +15,28 @@ int creer_interface(struct interface_t *interface) {
     printf("Erreur: impossible d'initialiser la gestion des événements : %s\n", SDL_GetError());
     return 1;
   }
-  // On lit d'abord l'image du clavier pour avoir les dimensions de la fenêtre
-  SDL_Surface *clavier_surface;
-  if (charger_surface("Images/clavier.png", &clavier_surface) != 0) {
-    return 1;
-  }
   // Création de la fenêtre de l'application
-  interface->window = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, clavier_surface->w, clavier_surface->h, SDL_WINDOW_OPENGL);
-  if (interface->window == NULL) {
+  interface->fenetre = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, LARGEUR_INTERFACE, HAUTEUR_INTERFACE, SDL_WINDOW_OPENGL);
+  if (interface->fenetre == NULL) {
     SDL_Log("Erreur: impossible de créer la fenêtre.\n");
-    liberer_surface(clavier_surface);
     return 1;
   }
   // Création du moteur de rendu
-  interface->renderer = SDL_CreateRenderer(interface->window, -1, SDL_RENDERER_ACCELERATED);
+  interface->renderer = SDL_CreateRenderer(interface->fenetre, -1, SDL_RENDERER_ACCELERATED);
   if (interface->renderer == NULL) {
     SDL_Log("Erreur: impossible de créer le moteur de rendu.\n");
-    liberer_surface(clavier_surface);
-    SDL_DestroyWindow(interface->window);
-    return 1;
-  }
-  // On peut maintenant charger toutes les images et les convertir en textures pour le moteur de rendu
-  if (convertir_vers_texture(clavier_surface, interface->renderer, &interface->texture_clavier) != 0) {
-    liberer_surface(clavier_surface);
-    SDL_DestroyWindow(interface->window);
+    SDL_DestroyWindow(interface->fenetre);
     return 1;
   }
   // La surface associée au clavier n'est plus utile
-  liberer_surface(clavier_surface);
+  if (charger_texture("Images/clavier.png", interface->renderer, &interface->texture_clavier) != 0) {
+    SDL_Log("Erreur: impossible de charger la texture du clavier.\n");
+    SDL_DestroyWindow(interface->fenetre);    
+  }
+  interface->position_clavier.x = 0;
+  interface->position_clavier.y = Y_CLAVIER;
+  interface->position_clavier.w = 800;
+  interface->position_clavier.h = 88;
   // On lit les textures associées aux différents types de touches
   // Pour chacune des textures de touche active
   // Charge l'image correspondante
@@ -55,6 +49,9 @@ int creer_interface(struct interface_t *interface) {
     if (charger_texture(noms_textures_touches[i], interface->renderer, &interface->textures_touches[i]) != 0) {
       for (int j = 0; j < i; ++j)
         liberer_texture(interface->textures_touches[j]);
+      SDL_Log("Erreur: impossible de charger la texture des touches.\n");
+      liberer_texture(interface->texture_clavier);
+      SDL_DestroyWindow(interface->fenetre);    
       return 1;
     } // charger_texture
   } // for i
@@ -66,7 +63,7 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
   Uint32 delai_interface = DELAI_INTERFACE;;
   Uint32 t_demarrage = SDL_GetTicks();
   bool son_demarre = false;
-  SDL_AudioDeviceID deviceId;
+  SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, wav_spec, NULL, 0);
   Uint32 t_actuel;
   bool fini = false;
   while (!fini) {
@@ -80,13 +77,16 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
     struct liste_note_t * tete = liste;
     t_actuel = SDL_GetTicks() - t_demarrage;
     if (!son_demarre && t_actuel >= delai_interface) {
-      deviceId = jouer_son(wav_spec, wav_buffer, wav_length);
+      if (jouer_son(wav_spec, wav_buffer, wav_length, deviceId) != 0) {
+        fini = true;
+        break;
+      }
       son_demarre = true;
     }
     Uint32 t_horizon = t_actuel + delai_interface;
     SDL_SetRenderDrawColor(interface->renderer, 0, 0, 0, 255);
     SDL_RenderClear(interface->renderer);
-    SDL_RenderCopy(interface->renderer, interface->texture_clavier, NULL, NULL);
+    SDL_RenderCopy(interface->renderer, interface->texture_clavier, NULL, &interface->position_clavier);
     // On arrête le parcours de la liste à la fin de la liste
     // ou dès qu'on rencontre une note trop dans le futur
     // car les notes sont triées par date de début croissantes
@@ -153,5 +153,5 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
 // Détruit l'interface et les éléments qui lui sont associés
 void liberer_interface(struct interface_t * interface) {
   SDL_DestroyRenderer(interface->renderer);
-  SDL_DestroyWindow(interface->window);
+  SDL_DestroyWindow(interface->fenetre);
 }

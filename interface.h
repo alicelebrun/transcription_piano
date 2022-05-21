@@ -4,17 +4,28 @@
 #include <SDL.h>
 #include "note.h"
 
+// Vitesse de défilement en pixels par seconde
+#define VITESSE_NOTE 100
+#define LARGEUR_NOTE 6
+#define DELAI_INTERFACE (1000 * (Y_CLAVIER - 5)) / VITESSE_NOTE
+#define LARGEUR_INTERFACE 800
+#define HAUTEUR_INTERFACE 1000
+
 struct interface_t {
   SDL_Window *fenetre;
   SDL_Renderer *renderer;
-  SDL_Texture *clavier;
-  SDL_Texture *touches[5];
+  SDL_Rect position_clavier;
+  SDL_Texture * texture_clavier;
+  SDL_Texture * textures_touches[5];
 };
 
-int creer_interface(struct interface_t * interface);
+// Crée l'interface graphique en retournant une structure interface
+int creer_interface(struct interface_t *interface);
 
-void animer_interface(struct interface_t* interface, struct liste_note_t * liste, Uint32 durée); //durée sera un miliseconde
+// Anime l'interface à l'aide de la séquence de notes et du fichier son, pour une durée en milliseconde
+void animer_interface(struct interface_t *interface, struct liste_note_t *notes, Uint32 duree, SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length);
 
-void liberer_interface(struct interface_t* interface);
+// Détruit l'interface et les éléments qui lui sont associés
+void liberer_interface(struct interface_t * interface);
 
 #endif
