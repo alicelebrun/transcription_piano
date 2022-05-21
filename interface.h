@@ -18,7 +18,7 @@ struct interface_t {
 };
 
 // Crée l'interface graphique en retournant une structure interface
-int creer_interface(struct interface_t *interface);
+int creer_interface(struct interface_t *interface, char * nom_fichier);
 
 // Anime l'interface à l'aide de la séquence de notes et du fichier son, pour une durée en milliseconde
 void animer_interface(struct interface_t *interface, struct liste_note_t *notes, Uint32 duree, SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length);

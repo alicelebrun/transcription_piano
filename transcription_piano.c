@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
   afficher_liste_notes(notes);
   // Crée l'interface graphique
   struct interface_t interface;
-  if (creer_interface(&interface) != 0) {
+  if (creer_interface(&interface, nom_fichier) != 0) {
     printf("Erreur: impossible de créer l'interface graphique.\n");
     return 1;
   };

@@ -5,7 +5,7 @@
 #include "interface.h"
 
 // Crée l'interface graphique en retournant une structure interface
-int creer_interface(struct interface_t *interface) {
+int creer_interface(struct interface_t *interface, char *nom_fichier) {
   // Initialisation du moteur graphique
   if (initialiser_graphique() != 0) {
     return 1;
@@ -24,7 +24,9 @@ int creer_interface(struct interface_t *interface) {
     hauteur_ecran = 1000;
     position_fenetre = SDL_WINDOWPOS_CENTERED;
   }
-  interface->fenetre = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, position_fenetre, LARGEUR_INTERFACE, hauteur_ecran, SDL_WINDOW_OPENGL);
+  char nom_fenetre[256] = "Transcription piano - ";
+  strcat(nom_fenetre, nom_fichier);
+  interface->fenetre = SDL_CreateWindow(nom_fenetre, SDL_WINDOWPOS_CENTERED, position_fenetre, LARGEUR_INTERFACE, hauteur_ecran, SDL_WINDOW_OPENGL);
   if (interface->fenetre == NULL) {
     SDL_Log("Erreur: impossible de créer la fenêtre.\n");
     return 1;
