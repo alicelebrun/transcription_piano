@@ -4,8 +4,6 @@
 #include <SDL.h>
 
 #define NOMBRE_TOUCHES 88
-#define Y_CLAVIER 900 // coordonée du bord supérieur du clavier
-#define MARGE_CLAVIER 5
 #define H_BLANCHE 80 //hauteur d'une touche blanche
 #define L_BLANCHE 15 //largeur d'une touche blanche
 #define H_NOIRE 51

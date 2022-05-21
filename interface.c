@@ -16,7 +16,10 @@ int creer_interface(struct interface_t *interface) {
     return 1;
   }
   // Création de la fenêtre de l'application
-  interface->fenetre = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, LARGEUR_INTERFACE, HAUTEUR_INTERFACE, SDL_WINDOW_OPENGL);
+  SDL_DisplayMode DM;
+  SDL_GetCurrentDisplayMode(0, &DM);
+  Uint32 hauteur_ecran = DM.h-120;
+  interface->fenetre = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, 0, LARGEUR_INTERFACE, hauteur_ecran, SDL_WINDOW_OPENGL);
   if (interface->fenetre == NULL) {
     SDL_Log("Erreur: impossible de créer la fenêtre.\n");
     return 1;
@@ -34,7 +37,7 @@ int creer_interface(struct interface_t *interface) {
     SDL_DestroyWindow(interface->fenetre);
   }
   interface->position_clavier.x = 0;
-  interface->position_clavier.y = Y_CLAVIER;
+  interface->position_clavier.y = hauteur_ecran - 100;
   interface->position_clavier.w = 800;
   interface->position_clavier.h = 88;
   // On lit les textures associées aux différents types de touches
@@ -60,7 +63,7 @@ int creer_interface(struct interface_t *interface) {
 
 // Anime l'interface à l'aide de la séquence de notes et du fichier son
 void animer_interface(struct interface_t *interface, struct liste_note_t *liste, Uint32 duree, SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length) {
-  Uint32 delai_interface = DELAI_INTERFACE;;
+  Uint32 delai_interface = (1000 * interface->position_clavier.y) / VITESSE_NOTE;
   Uint32 t_demarrage = SDL_GetTicks();
   bool son_demarre = false;
   SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, wav_spec, NULL, 0);
@@ -108,7 +111,9 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
       if (!trop_tot && !trop_tard) {
         // La touche est active
         if (t_actuel >= t_debut) {
-          copier_texture(interface->textures_touches[note->touche->type], &note->touche->position, interface->renderer);
+	  SDL_Rect position = note->touche->position;
+	  position.y = interface->position_clavier.y + 6;
+          copier_texture(interface->textures_touches[note->touche->type], &position, interface->renderer);
           printf(" note=%s", note->touche->nom);
         }
         SDL_Rect rect;
@@ -122,8 +127,8 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
         rect.h = ((t_max - t_min) * VITESSE_NOTE) / 1000;
         if (rect.h > 0) {
           rect.y = ((t_horizon - t_max) * VITESSE_NOTE) / 1000;
-          if (rect.y + rect.h >= Y_CLAVIER) {
-            rect.h = Y_CLAVIER - rect.y;
+          if (rect.y + rect.h >= interface->position_clavier.y) {
+            rect.h = interface->position_clavier.y - rect.y;
           }
           if (note->touche->type == NOIRE) {
             SDL_SetRenderDrawColor(interface->renderer, 170, 255, 136, 255);

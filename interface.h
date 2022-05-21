@@ -7,9 +7,7 @@
 // Vitesse de défilement en pixels par seconde
 #define VITESSE_NOTE 100
 #define LARGEUR_NOTE 6
-#define DELAI_INTERFACE (1000 * (Y_CLAVIER - 5)) / VITESSE_NOTE
 #define LARGEUR_INTERFACE 800
-#define HAUTEUR_INTERFACE 1000
 
 struct interface_t {
   SDL_Window *fenetre;
