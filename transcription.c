@@ -5,13 +5,13 @@
 
 #include "transcription.h"
 
-#define HARMONIQUES 2
-#define EPS_AMPLITUDE 0.01
-#define LARGEUR_SOUS_BLOC 2000
-#define NOMBRE_SOUS_BLOCS 9
+#define HARMONIQUES 3
+#define EPS_AMPLITUDE 0.02
+#define LARGEUR_SOUS_BLOC 2048
+#define NOMBRE_SOUS_BLOCS 7
 #define LARGEUR_BLOC (LARGEUR_SOUS_BLOC * (NOMBRE_SOUS_BLOCS + 1) / 2)
 
-//#define SAUVE_DANS_FICHIER
+#define SAUVE_DANS_FICHIER
 
 int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut, double ** spectrogramme, double ** frequences) { //int début et int fin sont des indices qui permettront de découper le signal en bloc ne contenant qu'une note chacun. *spectrogramme est le spectrogramme qui sera rempli dans la fonction (c'est un tableau qui contiendra l'amplitude de la fft), et frequences est le tableau contenant les fréquences associées au spectrogramme.
   double * signal_bloc = malloc(LARGEUR_SOUS_BLOC * sizeof(double)); // On alloue la mémoire pour stocker le bloc de signal réel.
@@ -42,7 +42,7 @@ int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut
   int demiBloc = LARGEUR_SOUS_BLOC / 2;
 
   for(int i = 0; i < demiBloc; ++i) {
-    (*frequences)[i] = (i+0.5) * df; //demiBloc car la transformée de Fourier d'un signal réel est paire donc les infos sont redondantes
+    (*frequences)[i] = i * df; //demiBloc car la transformée de Fourier d'un signal réel est paire donc les infos sont redondantes
   } // for i
 
   //Initialisation du spectrogramme
@@ -81,42 +81,37 @@ int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut
 // moyenne ppour équilibrer
 double calculer_produit_spectral(int indice_f, double * spectrogramme, double * frequences, int taille) { //f = fréquence fondamentale qui sert à calculer le spectrogramme, taille = taille du spectrogramme (et de fréquences): on mettra demiBloc
   double produit_spectral = 0.0;
-  int num = 0;
   for (int i = 1; i <= HARMONIQUES; ++i) {
-    int index = i * indice_f;
-    if (index < taille) {
-      produit_spectral += log(spectrogramme[index]);
-      ++num;
-    }
+    produit_spectral += log(spectrogramme[i * indice_f]);
   }
-  return produit_spectral / num;
+  return produit_spectral;
 }
 
 //On maximise le produit spectral pour trouver la fréquence fondamentale. On renvoie l'indice correspondant à la bonne fréquence dans le tableau de Fréquences
 int maximiser_produit_spectral(double * spectrogramme, double* frequences, int taille, struct clavier_t* clavier) {
-  int indice = 1;
-  double produit_max = calculer_produit_spectral(indice, spectrogramme, frequences, taille);
-  for (int i = 2; i < taille; ++i) {
-    double produit = calculer_produit_spectral(i, spectrogramme, frequences, taille);
+  int indice_max = 1;
+  double produit_max = calculer_produit_spectral(indice_max, spectrogramme, frequences, taille);
+  for (int indice_f = 2; indice_f < taille / HARMONIQUES; ++indice_f) {
+    double produit = calculer_produit_spectral(indice_f, spectrogramme, frequences, taille);
     if (produit > produit_max) {
       produit_max = produit;
-      indice = i;
+      indice_max = indice_f;
     }
   }//for
   // La fréquence qui maximise le produit
-  double f = frequences[indice];
+  double f = frequences[indice_max];
   // Recherche de la note de piano correspondante
-  indice = 0;
-  double ecart_min = fabs(f - clavier->touches[indice].frequence);
+  int indice_touche = 0;
+  double ecart_min = fabs(f - clavier->touches[indice_touche].frequence);
   for (int i = 1; i < NOMBRE_TOUCHES; ++i) {
     double ecart = fabs(f - clavier->touches[i].frequence);
     if (ecart < ecart_min) {
       ecart_min = ecart;
-      indice = i;
+      indice_touche = i;
     }
   }
-  printf("[maximiser_produit_spectral] Fréquence=%gHz touche=%s (%d) fréquence touche=%gHz\n", f, clavier->touches[indice].nom, indice, clavier->touches[indice].frequence);
-  return indice;
+  printf("[maximiser_produit_spectral] Fréquence=%gHz (%d) touche=%s (%d) fréquence touche=%gHz\n", f, indice_max, clavier->touches[indice_touche].nom, indice_touche, clavier->touches[indice_touche].frequence);
+  return indice_touche;
 }
 
 // Convertit un signal audio en une séquence de notes. La stratégie consiste à
@@ -197,7 +192,7 @@ struct liste_note_t* transcrire(double * donnees_son, double * instant_son, int 
         strcat(filename, ".csv");
         FILE * file = fopen(filename, "w");
         for (int i = 0; i < LARGEUR_SOUS_BLOC / 2; ++i) {
-          fprintf(file, "%.20e;%.20e\n", frequences[i], spectrogramme[i]);
+          fprintf(file, "%.20e;%.20e;%.20e\n", frequences[i], spectrogramme[i], calculer_produit_spectral(i, spectrogramme, frequences, LARGEUR_SOUS_BLOC / 2));
         }
         fclose(file);
         strcpy(filename, "signal");
@@ -209,6 +204,7 @@ struct liste_note_t* transcrire(double * donnees_son, double * instant_son, int 
         }
         fclose(file);
 #endif
+        printf("[transcrire] Maximiser sur le bloc %d\n", index_bloc);
         int indice_note_bloc = maximiser_produit_spectral(spectrogramme, frequences, LARGEUR_SOUS_BLOC / 2, clavier);
         // Vérifier si la note trouvée complète la note courante
         if (indice_note_bloc == indice_note_en_cours) {
