@@ -18,8 +18,13 @@ int creer_interface(struct interface_t *interface) {
   // Création de la fenêtre de l'application
   SDL_DisplayMode DM;
   SDL_GetCurrentDisplayMode(0, &DM);
+  int position_fenetre = 0;
   Uint32 hauteur_ecran = DM.h-120;
-  interface->fenetre = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, 0, LARGEUR_INTERFACE, hauteur_ecran, SDL_WINDOW_OPENGL);
+  if (hauteur_ecran > 1000) {
+    hauteur_ecran = 1000;
+    position_fenetre = SDL_WINDOWPOS_CENTERED;
+  }
+  interface->fenetre = SDL_CreateWindow("Transcription piano", SDL_WINDOWPOS_CENTERED, position_fenetre, LARGEUR_INTERFACE, hauteur_ecran, SDL_WINDOW_OPENGL);
   if (interface->fenetre == NULL) {
     SDL_Log("Erreur: impossible de créer la fenêtre.\n");
     return 1;
