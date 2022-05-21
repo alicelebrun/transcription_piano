@@ -5,13 +5,13 @@
 
 #include "transcription.h"
 
-#define HARMONIQUES 3
+#define HARMONIQUES 2
 #define EPS_AMPLITUDE 0.005
-#define LARGEUR_SOUS_BLOC 2048
-#define NOMBRE_SOUS_BLOCS 5
+#define LARGEUR_SOUS_BLOC 2000
+#define NOMBRE_SOUS_BLOCS 9
 #define LARGEUR_BLOC (LARGEUR_SOUS_BLOC * (NOMBRE_SOUS_BLOCS + 1) / 2)
 
-#define SAUVE_DANS_FICHIER
+//#define SAUVE_DANS_FICHIER
 
 int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut, double ** spectrogramme, double ** frequences) { //int début et int fin sont des indices qui permettront de découper le signal en bloc ne contenant qu'une note chacun. *spectrogramme est le spectrogramme qui sera rempli dans la fonction (c'est un tableau qui contiendra l'amplitude de la fft), et frequences est le tableau contenant les fréquences associées au spectrogramme.
   fftw_complex * signal_bloc = malloc(LARGEUR_SOUS_BLOC * sizeof(fftw_complex)); // On alloue la mémoire pour stocker le bloc de signal réel.
@@ -116,7 +116,7 @@ int maximiser_produit_spectral(double * spectrogramme, double* frequences, int t
       indice = i;
     }
   }
-  printf("[maximiser_produit_spectral] Fréquence=%e touche=%s (%d) fréquence touche=%e\n", f, clavier->touches[indice].nom, indice, clavier->touches[indice].frequence);
+  printf("[maximiser_produit_spectral] Fréquence=%gHz touche=%s (%d) fréquence touche=%gHz\n", f, clavier->touches[indice].nom, indice, clavier->touches[indice].frequence);
   return indice;
 }
 
@@ -213,22 +213,18 @@ struct liste_note_t* transcrire(double * donnees_son, double * instant_son, int 
         int indice_note_bloc = maximiser_produit_spectral(spectrogramme, frequences, LARGEUR_SOUS_BLOC / 2, clavier);
         // Vérifier si la note trouvée complète la note courante
         if (indice_note_bloc == indice_note_en_cours) {
-          //printf("On prolonge la note en cours\n");
           t_fin_en_cours = instant_son[fin];
-          //printf("Le nouvel instant de fin de la note en cours est %e\n", t_fin_en_cours);
         } // On continue la note en cours
         // Sinon on stocke la note en cours et la note en cours passe à la note courante
         else {
-          //printf("Démarrage d'une nouvelle note\n");
           if (indice_note_en_cours != -1) {
             struct touche_t * touche_freq_max = &clavier->touches[indice_note_en_cours];
-            printf("On stocke la note en cours, touche=%s\n", touche_freq_max->nom);
+            printf("[transcrire] On stocke la note en cours, touche=%s\n", touche_freq_max->nom);
             liste = ajouter_note(liste, (Uint32)(1000 * t_debut_en_cours), (Uint32)(1000 * t_fin_en_cours), touche_freq_max); // 1000*t_. parce qu'on convertit les ms en s, et (Uint32) fait une conversion de double en Uint32.
           }
           t_debut_en_cours = instant_son[debut];
           t_fin_en_cours = instant_son[fin];
           indice_note_en_cours = indice_note_bloc;
-          //printf("La nouvelle note en cours est %s\n", clavier->touches[indice_note_en_cours].nom);
         } // On passe à une nouvelle note en cours
       } // Si le calcul du spectrogramme s'est bien passé
     } // Assez d'énergie dans le bloc
@@ -237,7 +233,7 @@ struct liste_note_t* transcrire(double * donnees_son, double * instant_son, int 
   // S'il reste une note en cours on l'ajoute à la liste
   if (indice_note_en_cours != -1) {
     struct touche_t *touche_freq_max = &clavier->touches[indice_note_en_cours];
-    printf("On stocke la note en cours, touche=%s\n", touche_freq_max->nom);
+    printf("[transcrire] On stocke la note en cours, touche=%s\n", touche_freq_max->nom);
     liste = ajouter_note(liste, (Uint32)(1000 * t_debut_en_cours), (Uint32)(1000 * t_fin_en_cours), touche_freq_max); // 1000*t_. parce qu'on convertit les ms en s, et (Uint32) fait une conversion de double en Uint32.
   }
   return liste;
