@@ -31,7 +31,7 @@ int creer_interface(struct interface_t *interface) {
   // La surface associée au clavier n'est plus utile
   if (charger_texture("Images/clavier.png", interface->renderer, &interface->texture_clavier) != 0) {
     SDL_Log("Erreur: impossible de charger la texture du clavier.\n");
-    SDL_DestroyWindow(interface->fenetre);    
+    SDL_DestroyWindow(interface->fenetre);
   }
   interface->position_clavier.x = 0;
   interface->position_clavier.y = Y_CLAVIER;
@@ -51,7 +51,7 @@ int creer_interface(struct interface_t *interface) {
         liberer_texture(interface->textures_touches[j]);
       SDL_Log("Erreur: impossible de charger la texture des touches.\n");
       liberer_texture(interface->texture_clavier);
-      SDL_DestroyWindow(interface->fenetre);    
+      SDL_DestroyWindow(interface->fenetre);
       return 1;
     } // charger_texture
   } // for i
@@ -64,13 +64,16 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
   Uint32 t_demarrage = SDL_GetTicks();
   bool son_demarre = false;
   SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, wav_spec, NULL, 0);
-  Uint32 t_actuel;
-  bool fini = false;
-  while (!fini) {
+  Uint32 t_actuel = 0;
+  bool animer_interface = true;
+  while (animer_interface) {
+    printf("                                               \r");
+    printf("t=%dms", t_actuel);
+    fflush(stdout);
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
-        fini = true;
+        animer_interface = true;
         break;
       }
     }
@@ -78,7 +81,7 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
     t_actuel = SDL_GetTicks() - t_demarrage;
     if (!son_demarre && t_actuel >= delai_interface) {
       if (jouer_son(wav_spec, wav_buffer, wav_length, deviceId) != 0) {
-        fini = true;
+        animer_interface = true;
         break;
       }
       son_demarre = true;
@@ -92,7 +95,8 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
     // car les notes sont triées par date de début croissantes
     bool trop_tot = false;
     bool trop_tard = false;
-    while (!fini) {
+    bool dessiner_notes = true;
+    while (dessiner_notes) {
       t_actuel = SDL_GetTicks() - t_demarrage;
       t_horizon = t_actuel + delai_interface;
       struct note_t * note = tete->note;
@@ -100,12 +104,12 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
       Uint32 t_fin   = note->t_fin + delai_interface;
       trop_tot  = t_debut > t_actuel + delai_interface;
       trop_tard = t_fin <= t_actuel;
-      //printf("trop tot=%s trop tard=%s\n", trop_tot ? "true" : "false", trop_tard ? "true" : "false");
       // Quelque chose à afficher
       if (!trop_tot && !trop_tard) {
         // La touche est active
         if (t_actuel >= t_debut) {
           copier_texture(interface->textures_touches[note->touche->type], &note->touche->position, interface->renderer);
+          printf(" note=%s", note->touche->nom);
         }
         SDL_Rect rect;
         // X rectangle
@@ -135,14 +139,16 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
         liste = supprimer_note(liste, note);
       }
       tete = tete->suivant;
-      fini = (liste == NULL) || (tete == liste) || trop_tot;
+      dessiner_notes = (liste != NULL) && (tete != liste) && !trop_tot;
     } // while tete != NULL
     SDL_RenderPresent(interface->renderer);
+    printf("\r");
+    fflush(stdout);
     Uint32 t_fin_anim = SDL_GetTicks() - t_demarrage;
     if (t_fin_anim < t_actuel + 33) {
       SDL_Delay(t_actuel + 33 - t_fin_anim);
     }
-    fini = liste == NULL;
+    animer_interface = liste != NULL;
   } // while (!fini)
   if (t_actuel > duree + delai_interface) {
     SDL_Delay(t_actuel - (duree + delai_interface));

@@ -3,6 +3,16 @@
 #include "transcription.h"
 #include "interface.h"
 
+void affiche_avec_separateur(char* message, char *sep) {
+  for (int i = 0; i < strlen(message); ++i)
+    printf("%s", sep);
+  printf("\n");
+  printf("%s\n", message);
+  for (int i = 0; i < strlen(message); ++i)
+    printf("%s", sep);
+  printf("\n");
+}
+
 int main(int argc, char* argv[]) {
   if (argc != 2) {
     printf("Usage: transcription_piano fichier.wav\n");
@@ -39,21 +49,23 @@ int main(int argc, char* argv[]) {
   creer_clavier(&clavier);
 
   // Crée la transcription du signal en liste de notes
-  printf("Transcrire musique\n");
+  char message[256] = "Transcription de ";
+  strcat(message, nom_fichier);
+  affiche_avec_separateur(message, "=");
   struct liste_note_t * notes = transcrire(donnees_son, instants_son, taille, &clavier);
   // On libère les structures du signal
   free(donnees_son);
   free(instants_son);
+  affiche_avec_separateur("Resultat de la transcription", "-");
   afficher_liste_notes(notes);
   // Crée l'interface graphique
   struct interface_t interface;
-  printf("Créer interface\n");
   if (creer_interface(&interface) != 0) {
     printf("Erreur: impossible de créer l'interface graphique.\n");
     return 1;
   };
   // Lance l'animation des notes transcrites
-  printf("Animer interface\n");
+  affiche_avec_separateur("Animation de la lecture", "-");
   animer_interface(&interface, notes, duree, &wav_spec, wav_buffer, wav_length);
   // Libère toutes les ressources
   liberer_son(wav_buffer);

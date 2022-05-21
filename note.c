@@ -95,7 +95,7 @@ void afficher_note(struct note_t * note) {
   if (note == NULL) {
     printf("note=NULL\n");
   } else {
-    printf("note=%p nom=%s t_debut=%d t_fin=%d\n", note, note->touche->nom, note->t_debut, note->t_fin);
+    printf("note=(%s t_debut=%dms t_fin=%dms)\n", note->touche->nom, note->t_debut, note->t_fin);
   }
 }
 
@@ -119,7 +119,7 @@ void afficher_liste_notes(struct liste_note_t * liste) {
 int creer_clavier(struct clavier_t *clavier) {
   // On construit maintenant les 88 touches du piano...
   clavier->touches[ 0].nom = "La-1";
-  clavier->touches[ 0].frequence = 27.499999999999947;
+  clavier->touches[ 0].frequence = 27.5;
   clavier->touches[ 0].type = GAUCHE;
   clavier->touches[ 0].position.x = 14;
   clavier->touches[ 0].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -215,7 +215,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[11].position.h = H_NOIRE;
   //
   clavier->touches[12].nom = "La0";
-  clavier->touches[12].frequence = 54.99999999999993;
+  clavier->touches[12].frequence = 55.0;
   clavier->touches[12].type = CENTRE;
   clavier->touches[12].position.x = 800.0 / 1750.0 * 246;
   clavier->touches[12].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -311,7 +311,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[23].position.h = H_NOIRE;
   //
   clavier->touches[24].nom = "La1";
-  clavier->touches[24].frequence = 109.99999999999991;
+  clavier->touches[24].frequence = 110.0;
   clavier->touches[24].type = CENTRE;
   clavier->touches[24].position.x = 800.0 / 1750.0 * 478;
   clavier->touches[24].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -407,7 +407,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[35].position.h = H_NOIRE;
   //
   clavier->touches[36].nom = "La2";
-  clavier->touches[36].frequence = 219.99999999999991;
+  clavier->touches[36].frequence = 220.0;
   clavier->touches[36].type = CENTRE;
   clavier->touches[36].position.x = 800.0 / 1750.0 * 710;
   clavier->touches[36].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -503,7 +503,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[47].position.h = H_NOIRE;
   //
   clavier->touches[48].nom = "La3";
-  clavier->touches[48].frequence = 440.00000000000006;
+  clavier->touches[48].frequence = 440.0;
   clavier->touches[48].type = CENTRE;
   clavier->touches[48].position.x = 800.0 / 1750.0 * 942;
   clavier->touches[48].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -599,7 +599,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[59].position.h = H_NOIRE;
   //
   clavier->touches[60].nom = "La4";
-  clavier->touches[60].frequence = 880.0000000000003;
+  clavier->touches[60].frequence = 880.0;
   clavier->touches[60].type = CENTRE;
   clavier->touches[60].position.x = 800.0 / 1750.0 * 1174;
   clavier->touches[60].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -695,7 +695,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[71].position.h = H_NOIRE;
   //
   clavier->touches[72].nom = "La5";
-  clavier->touches[72].frequence = 1760.000000000001;
+  clavier->touches[72].frequence = 1760.0;
   clavier->touches[72].type = CENTRE;
   clavier->touches[72].position.x = 800.0 / 1750.0 * 1406;
   clavier->touches[72].position.y = Y_CLAVIER + MARGE_CLAVIER;
@@ -791,7 +791,7 @@ int creer_clavier(struct clavier_t *clavier) {
   clavier->touches[83].position.h = H_NOIRE;
   //
   clavier->touches[84].nom = "La6";
-  clavier->touches[84].frequence = 3520.000000000004;
+  clavier->touches[84].frequence = 3520.0;
   clavier->touches[84].type = CENTRE;
   clavier->touches[84].position.x = 800.0 / 1750.0 * 1638;
   clavier->touches[84].position.y = Y_CLAVIER + MARGE_CLAVIER;
