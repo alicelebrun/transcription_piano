@@ -77,13 +77,12 @@ void fermer_son(SDL_AudioDeviceID deviceID) {
 }
 
 /*Jouer son*/
-int jouer_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, SDL_AudioDeviceID * deviceID) {
-  *deviceID = SDL_OpenAudioDevice(NULL, 0, wav_spec, NULL, 0);
-  if (SDL_QueueAudio(*deviceID, wav_buffer, wav_length) != 0) {
+int jouer_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, SDL_AudioDeviceID deviceID) {
+  if (SDL_QueueAudio(deviceID, wav_buffer, wav_length) != 0) {
     SDL_Log("Erreur: impossible de mettre le morceau de musique dans la file audio: %s\n", SDL_GetError());
     return 1;
   }
-  SDL_PauseAudioDevice(*deviceID, 0);
+  SDL_PauseAudioDevice(deviceID, 0);
   return 0;
 }
 

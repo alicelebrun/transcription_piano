@@ -20,6 +20,6 @@ void liberer_son(Uint8 *wav_buffer);
 void fermer_son(SDL_AudioDeviceID deviceID);
 
 /* Jouer son */
-int jouer_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, SDL_AudioDeviceID * deviceID);
+int jouer_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, SDL_AudioDeviceID deviceID);
 
 #endif
