@@ -42,6 +42,19 @@ int main(int argc, char* argv[]) {
   if(convertir_son(&wav_spec, wav_buffer, wav_length, &donnees_son, &instants_son, &taille) !=0) {
     return 1;
   }
+#ifdef SAUVE_DANS_FICHIER
+  int n = strlen(nom_fichier);
+  nom_fichier[n-3] = 'c';
+  nom_fichier[n-2] = 's';
+  nom_fichier[n-1] = 'v';
+  printf("signal=%s\n", nom_fichier);
+  FILE * file = fopen(nom_fichier, "w");
+  for (int i = 0; i < taille; ++i) {
+    printf("%.20e;%.20e\n", instants_son[i], donnees_son[i]);
+    fprintf(file, "%.20e;%.20e\n", instants_son[i], donnees_son[i]);
+  }
+  fclose(file);
+#endif
   Uint32 duree = 1000 * instants_son[taille - 1];
   //On cree le clavier
   struct clavier_t clavier;
@@ -53,6 +66,7 @@ int main(int argc, char* argv[]) {
   strcat(message, nom_fichier);
   affiche_avec_separateur(message, "=");
   struct liste_note_t * notes = transcrire(donnees_son, instants_son, taille, &clavier);
+
   // On libère les structures du signal
   free(donnees_son);
   free(instants_son);

@@ -5,13 +5,13 @@
 
 #include "transcription.h"
 
-#define HARMONIQUES 3
+#define HARMONIQUES 2
 #define EPS_AMPLITUDE 0.02
-#define LARGEUR_SOUS_BLOC 2048
-#define NOMBRE_SOUS_BLOCS 7
+#define LARGEUR_SOUS_BLOC 1536
+#define NOMBRE_SOUS_BLOCS 21
 #define LARGEUR_BLOC (LARGEUR_SOUS_BLOC * (NOMBRE_SOUS_BLOCS + 1) / 2)
 
-#define SAUVE_DANS_FICHIER
+//#define SAUVE_DANS_FICHIER
 
 int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut, double ** spectrogramme, double ** frequences) { //int début et int fin sont des indices qui permettront de découper le signal en bloc ne contenant qu'une note chacun. *spectrogramme est le spectrogramme qui sera rempli dans la fonction (c'est un tableau qui contiendra l'amplitude de la fft), et frequences est le tableau contenant les fréquences associées au spectrogramme.
   double * signal_bloc = malloc(LARGEUR_SOUS_BLOC * sizeof(double)); // On alloue la mémoire pour stocker le bloc de signal réel.
