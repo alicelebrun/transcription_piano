@@ -78,7 +78,7 @@ int calculer_spectrogramme(double * donnees_son, double * instant_son, int debut
 
 //Produit spectral = log(produit de i = 1 à H de mod(X(if))^2
 // On ne prend que les harmoniques accessibles donc on calcule une
-// moyenne ppour équilibrer
+// moyenne pour équilibrer
 double calculer_produit_spectral(int indice_f, double * spectrogramme, double * frequences, int taille) { //f = fréquence fondamentale qui sert à calculer le spectrogramme, taille = taille du spectrogramme (et de fréquences): on mettra demiBloc
   double produit_spectral = 0.0;
   for (int i = 1; i <= HARMONIQUES; ++i) {

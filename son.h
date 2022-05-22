@@ -7,14 +7,13 @@
 int initialiser_son();
 
 /* Chargement du fichier son */
-int charger_son(char * nom_fichier, SDL_AudioSpec *wav_spec, Uint8 **wav_buffer, Uint32 *wav_length);
+int charger_son(char * nom_fichier, SDL_AudioSpec *wav_spec, Uint8 **wav_buffer, Uint32 *wav_length); //crée une structure SDL_AudioSpec contenant les informations utiles de l'audio
 
 /* Conversion du fichier son */
-int convertir_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, double ** donnee_son, double ** instant_son, int * taille);
-// On veut pouvoir modifier les 3 derniers arguments, donc on entre des pointeurs vers ces éléments en argument -> une * en +. Lors de l'appel de la fonction, on entrera les adresses mémoires (donc &argument). On passe un pointeur pour wav_spec pour ne pas avoir à recopier la structure
+int convertir_son(SDL_AudioSpec *wav_spec, Uint8 *wav_buffer, Uint32 wav_length, double ** donnee_son, double ** instant_son, int * taille); //crée deux tableaux contenant les amplitudes de l'audio pour l'un, et les instants d'échantillonnage pour l'autre.
 
 /* Libération du son */
-void liberer_son(Uint8 *wav_buffer);
+void liberer_son(Uint8 *wav_buffer); //Libère la mémoire allouée pour traiter l'audio.
 
 /* Fermer le moteur audio */
 void fermer_son(SDL_AudioDeviceID deviceID);
