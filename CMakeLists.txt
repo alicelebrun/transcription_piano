@@ -6,6 +6,7 @@ set(CMAKE_C_FLAGS "-Wall -Werror -g3")
 add_executable(transcription_piano transcription_piano.c son.c note.c graphique.c interface.c transcription.c)
 
 install(TARGETS transcription_piano DESTINATION .)
+INSTALL(FILES transcription.cfg DESTINATION .)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
 

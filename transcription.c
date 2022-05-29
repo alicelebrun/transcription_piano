@@ -5,11 +5,11 @@
 
 #include "transcription.h"
 
-#define HARMONIQUES 2
-#define EPS_AMPLITUDE 0.02
-#define LARGEUR_SOUS_BLOC 1536
-#define NOMBRE_SOUS_BLOCS 21
-#define LARGEUR_BLOC (LARGEUR_SOUS_BLOC * (NOMBRE_SOUS_BLOCS + 1) / 2)
+// Paramètres de l'algorithme de transcription
+static int HARMONIQUES = 2; // Nombre d'harmoniques dand le produit spectral
+static double EPS_AMPLITUDE = 0.02; // Seuil de détection de note dans un bloc
+static int LARGEUR_SOUS_BLOC = 1536; // Taille des sous_blocs
+static int NOMBRE_SOUS_BLOCS = 21; // Nombre de sous_blocs se chevauchant à 50%
 
 //#define SAUVE_DANS_FICHIER
 
@@ -99,18 +99,18 @@ int maximiser_produit_spectral(double * spectrogramme, double* frequences, int t
     }
   }//for
   // La fréquence qui maximise le produit
-  double f = frequences[indice_max];
+  double logF = log(frequences[indice_max]);
   // Recherche de la note de piano correspondante
   int indice_touche = 0;
-  double ecart_min = fabs(f - clavier->touches[indice_touche].frequence);
+  double ecart_min = fabs(logF - log(clavier->touches[indice_touche].frequence));
   for (int i = 1; i < NOMBRE_TOUCHES; ++i) {
-    double ecart = fabs(f - clavier->touches[i].frequence);
+    double ecart = fabs(logF - log(clavier->touches[i].frequence));
     if (ecart < ecart_min) {
       ecart_min = ecart;
       indice_touche = i;
     }
   }
-  printf("[maximiser_produit_spectral] Fréquence=%gHz (%d) touche=%s (%d) fréquence touche=%gHz\n", f, indice_max, clavier->touches[indice_touche].nom, indice_touche, clavier->touches[indice_touche].frequence);
+  printf("[maximiser_produit_spectral] Fréquence=%gHz (%d) touche=%s (%d) fréquence touche=%gHz\n", exp(logF), indice_max, clavier->touches[indice_touche].nom, indice_touche, clavier->touches[indice_touche].frequence);
   return indice_touche;
 }
 
@@ -125,8 +125,28 @@ struct liste_note_t* transcrire(double * donnees_son, double * instant_son, int 
   //
   // On ajuste la taille pour qu'elle soit un multiple de LARGEUR_BLOC
   // La division est entière (pas de partie fractionnaire)
+  //On lit le fichier de configuration
+  FILE * fichier_configuration = fopen("transcription.cfg", "r");
+  if (fichier_configuration != NULL) {
+    char buffer[256];
+    if (fscanf(fichier_configuration, "%s%d", buffer, &HARMONIQUES) != 2) {
+      HARMONIQUES = 3;
+    }
+    if (fscanf(fichier_configuration, "%s%le", buffer, &EPS_AMPLITUDE) != 2) {
+      EPS_AMPLITUDE = 0.02;
+    }
+    if (fscanf(fichier_configuration, "%s%d", buffer, &LARGEUR_SOUS_BLOC) != 2) {
+      LARGEUR_SOUS_BLOC = 1024;
+    }
+    if (fscanf(fichier_configuration, "%s%d", buffer, &NOMBRE_SOUS_BLOCS) != 2) {
+      NOMBRE_SOUS_BLOCS = 11;
+    }
+  } // fichier_configuration
+  int LARGEUR_BLOC = (LARGEUR_SOUS_BLOC * (NOMBRE_SOUS_BLOCS + 1) / 2);
   int nombre_blocs = taille / LARGEUR_BLOC;
   taille = nombre_blocs * LARGEUR_BLOC;
+  double dt = instant_son[1] - instant_son[0];
+  printf("[transcrire] Taille ajustée=%gs (%d) largeur bloc=%gs (%d) largeur sous-bloc=%gs (%d) nombre sous-blocs=%d harmoniques=%d epsilon amplitude=%g\n", taille * dt, taille, LARGEUR_BLOC * dt, LARGEUR_BLOC, LARGEUR_SOUS_BLOC * dt, LARGEUR_SOUS_BLOC, NOMBRE_SOUS_BLOCS, HARMONIQUES, EPS_AMPLITUDE);
   double * carre_signal = malloc(taille * sizeof(double));
   if (carre_signal == NULL) {
     printf("Erreur: impossible d'allouer le signal au carré.\n");

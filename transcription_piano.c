@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <SDL.h>
 #include "son.h"
 #include "transcription.h"
@@ -14,11 +15,16 @@ void affiche_avec_separateur(char* message, char *sep) {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    printf("Usage: transcription_piano fichier.wav\n");
+  if (argc != 2 && argc != 3) {
+    printf("Usage: transcription_piano fichier.wav [-novisu]\n");
+    printf("  [Obligatoire] fichier.wav: le nom du fichier à transcrire\n");
+    printf("  [Facultatif]  -novisu: pour sortir après la transcription\n");
+    printf("  Note: les paramètres de l'algorithme de transcription peuvent être modifiés\n");
+    printf("        à l'aide du fichier transcription.txt, voir l'exemple fourni.\n");
     return 1;
-  }
-  char* nom_fichier = argv[1]; //nom de l'audio
+  } // argc
+  char* nom_fichier = argv[1]; // nom de l'audio
+  bool novisu = (argc == 3) && (strncmp(argv[2], "-novisu", 7) == 0); // test s'il faut animer la transcription
 
   //On initialise le son en vérifiant qu'il n'y a pas eu d'erreur.
   if (initialiser_son() != 0) {
@@ -78,9 +84,11 @@ int main(int argc, char* argv[]) {
     printf("Erreur: impossible de créer l'interface graphique.\n");
     return 1;
   };
-  // Lance l'animation des notes transcrites
-  affiche_avec_separateur("Animation de la lecture", "-");
-  animer_interface(&interface, notes, duree, &wav_spec, wav_buffer, wav_length);
+  if (!novisu) {
+    // Lance l'animation des notes transcrites
+    affiche_avec_separateur("Animation de la lecture", "-");
+    animer_interface(&interface, notes, duree, &wav_spec, wav_buffer, wav_length);
+  }
   // Libère toutes les ressources
   liberer_son(wav_buffer);
   liberer_interface(&interface);
