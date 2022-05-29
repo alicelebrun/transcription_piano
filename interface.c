@@ -118,8 +118,8 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
       if (!trop_tot && !trop_tard) {
         // La touche est active
         if (t_actuel >= t_debut) {
-	  SDL_Rect position = note->touche->position;
-	  position.y = interface->position_clavier.y + 6;
+          SDL_Rect position = note->touche->position;
+          position.y = interface->position_clavier.y + 6;
           copier_texture(interface->textures_touches[note->touche->type], &position, interface->renderer);
           printf(" note=%s", note->touche->nom);
         }
@@ -166,6 +166,7 @@ void animer_interface(struct interface_t *interface, struct liste_note_t *liste,
     SDL_Delay(t_actuel - (duree + delai_interface));
   }
   fermer_son(deviceId);
+  printf("t=%dms\n", t_actuel);
 }
 
 // Détruit l'interface et les éléments qui lui sont associés
